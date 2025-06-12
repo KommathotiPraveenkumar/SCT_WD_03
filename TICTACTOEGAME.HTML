@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tic Tac Toe - Play vs Player or Computer</title>
+<style>
+  /* Reset & base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    color: #e0e7ff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 32px 16px 48px;
+  }
+  h1 {
+    font-weight: 900;
+    font-size: 2.8rem;
+    margin-bottom: 12px;
+    text-align: center;
+    background: linear-gradient(135deg, #a78bfa, #22d3ee);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .mode-selector {
+    margin-bottom: 32px;
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+  }
+  .mode-button {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #94a3b8;
+    background: transparent;
+    border: 2px solid #64748b;
+    border-radius: 14px;
+    padding: 12px 36px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    min-width: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .mode-button.active,
+  .mode-button:hover {
+    background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 6px 15px #06b6d4;
+  }
+  .mode-button svg {
+    fill: currentColor;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  .game-container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(88px, 120px));
+    grid-template-rows: repeat(3, minmax(88px, 120px));
+    gap: 16px;
+  }
+  .cell {
+    background: rgba(147, 197, 253, 0.1);
+    border: 2px solid #475569;
+    border-radius: 16px;
+    font-size: 4rem;
+    color: #a78bfa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    position: relative;
+  }
+  .cell:hover:not(.disabled) {
+    background: #4338ca;
+    color: #c4b5fd;
+  }
+  .cell.disabled {
+    cursor: default;
+    pointer-events: none;
+    color: #94a3b8;
+  }
+  .cell.win {
+    background: linear-gradient(135deg, #2dd4bf, #06b6d4);
+    color: white;
+    box-shadow: 0 0 16px #06b6d4;
+    font-weight: 900;
+  }
+  .status {
+    margin-top: 32px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    text-align: center;
+    min-height: 28px;
+  }
+  .reset-button {
+    margin-top: 32px;
+    background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+    border: none;
+    padding: 14px 48px;
+    border-radius: 14px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+  }
+  .reset-button:hover {
+    box-shadow: 0 8px 24px #22d3ee;
+    transform: translateY(-2px);
+  }
+  @media (max-width: 640px) {
+    body {
+      padding: 24px 8px 40px;
+    }
+    h1 {
+      font-size: 2rem;
+    }
+    .game-container {
+      grid-template-columns: repeat(3, minmax(60px, 80px));
+      grid-template-rows: repeat(3, minmax(60px, 80px));
+      gap: 12px;
+    }
+    .cell {
+      font-size: 3rem;
+      border-radius: 12px;
+    }
+    .mode-button {
+      min-width: 120px;
+      padding: 10px 24px;
+      font-size: 0.9rem;
+    }
+  }
+</style>
+<!-- Material icons via CDN -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+</head>
+<body>
+  <h1>Tic Tac Toe</h1>
+  <div class="mode-selector" role="radiogroup" aria-label="Select game mode">
+    <button class="mode-button active" aria-checked="true" role="radio" id="mode-pvp" aria-label="Play vs Player">
+      <span class="material-icons" aria-hidden="true">people</span> PvP
+    </button>
+    <button class="mode-button" aria-checked="false" role="radio" id="mode-pvc" aria-label="Play vs Computer">
+      <span class="material-icons" aria-hidden="true">smart_toy</span> PvC
+    </button>
+  </div>
+
+  <div class="game-container" role="grid" aria-label="Tic Tac Toe board" tabindex="0">
+    <!-- 9 cells -->
+    <div class="cell" role="gridcell" tabindex="0" aria-label="Top left cell"></div>
+    <div class="cell" role="gridcell" tabindex="0" aria-label="Top center cell"></div>
+    <div class="cell" role="gridcell" tabindex="0" aria-label="Top right cell"></div>
+    <div class="cell" role="gridcell" tabindex="0" aria-label="Middle left cell"></div>
+    <div class="cell" role="gridcell" tabindex="0" aria-label="Center cell"></div>
+    <div class="cell" role="gridcell" tabindex="0" aria-label="Middle right cell"></div>
+    <div class="cell" role="gridcell" tabindex="0" aria-label="Bottom left cell"></div>
+    <div class="cell" role="gridcell" tabindex="0" aria-label="Bottom center cell"></div>
+    <div class="cell" role="gridcell" tabindex="0" aria-label="Bottom right cell"></div>
+  </div>
+
+  <div class="status" aria-live="polite" aria-atomic="true"></div>
+  <button class="reset-button" type="button">Restart Game</button>
+
+<script>
+  (() => {
+    const cells = Array.from(document.querySelectorAll('.cell'));
+    const statusEl = document.querySelector('.status');
+    const resetBtn = document.querySelector('.reset-button');
+    const modeButtons = document.querySelectorAll('.mode-button');
+
+    // Game state
+    let board = ['', '', '', '', '', '', '', '', '']; // 3x3 positions
+    let currentPlayer = 'X';
+    let gameActive = true;
+    let vsComputer = false;
+
+    // Winning combinations indices
+    const winningCombinations = [
+      [0,1,2], [3,4,5], [6,7,8], // rows
+      [0,3,6], [1,4,7], [2,5,8], // columns
+      [0,4,8], [2,4,6]           // diagonals
+    ];
+
+    // Set mode: PvP or PvC
+    function setMode(computer) {
+      vsComputer = computer;
+      resetGame();
+      modeButtons.forEach(btn => {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-checked', 'false');
+      });
+      if (computer) {
+        document.getElementById('mode-pvc').classList.add('active');
+        document.getElementById('mode-pvc').setAttribute('aria-checked', 'true');
+      } else {
+        document.getElementById('mode-pvp').classList.add('active');
+        document.getElementById('mode-pvp').setAttribute('aria-checked', 'true');
+      }
+      updateStatus();
+    }
+
+    // Update status text
+    function updateStatus(text) {
+      if (text) {
+        statusEl.textContent = text;
+        return;
+      }
+      if (!gameActive) return;
+      if (vsComputer && currentPlayer === 'O') {
+        statusEl.textContent = "Computer's turn (O)";
+      } else {
+        statusEl.textContent = `Player ${currentPlayer}'s turn`;
+      }
+    }
+
+    // Check for winner or draw
+    function checkResult() {
+      for (const combo of winningCombinations) {
+        const [a,b,c] = combo;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          highlightWin(combo);
+          gameActive = false;
+          updateStatus(`Player ${board[a]} wins!`);
+          disableAllCells();
+          return board[a];
+        }
+      }
+      if (!board.includes('')) {
+        gameActive = false;
+        updateStatus("It's a draw!");
+        return 'draw';
+      }
+      return null;
+    }
+
+    // Highlight winning cells
+    function highlightWin(combo) {
+      combo.forEach(i => {
+        cells[i].classList.add('win');
+      });
+    }
+
+    // Disable all cells - for game end
+    function disableAllCells() {
+      cells.forEach(c => c.classList.add('disabled'));
+    }
+
+    // Enable all cells - for new game
+    function enableEmptyCells() {
+      cells.forEach((c,i) => {
+        if (board[i] === '') {
+          c.classList.remove('disabled');
+        }
+      });
+    }
+
+    // Handle click on cell
+    function handleCellClick(e) {
+      if (!gameActive) return;
+      const cell = e.target;
+      const index = cells.indexOf(cell);
+      if (board[index] !== '') return;
+
+      if (vsComputer && currentPlayer === 'O') return; // Prevent clicking during computer turn
+
+      makeMove(index, currentPlayer);
+
+      if (gameActive) {
+        if (vsComputer) {
+          currentPlayer = 'O';
+          updateStatus();
+          setTimeout(() => {
+            computerMove();
+            if (gameActive) {
+              currentPlayer = 'X';
+              updateStatus();
+            }
+          }, 500);
+        } else {
+          currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+          updateStatus();
+        }
+      }
+    }
+
+    // Make move on board and update UI
+    function makeMove(index, player) {
+      board[index] = player;
+      cells[index].textContent = player;
+      cells[index].classList.add('disabled');
+      checkResult();
+    }
+
+    // Computer move with simple AI
+    function computerMove() {
+      if (!gameActive) return;
+      // First check for winning move or block
+      let move = findBestMove('O');
+      if (move === -1) {
+        move = findBestMove('X'); // block opponent
+      }
+      if (move === -1) {
+        move = pickRandomMove();
+      }
+      makeMove(move, 'O');
+    }
+
+    // Find winning/block move: return cell index or -1
+    function findBestMove(player) {
+      for (let i = 0; i < 9; i++) {
+        if (board[i] === '') {
+          board[i] = player;
+          if (isWinner(player)) {
+            board[i] = '';
+            return i;
+          }
+          board[i] = '';
+        }
+      }
+      return -1;
+    }
+    // Check if player is winner for temporary check
+    function isWinner(player) {
+      return winningCombinations.some(combo => {
+        const [a,b,c] = combo;
+        return board[a] === player && board[b] === player && board[c] === player;
+      });
+    }
+
+    // Pick random empty cell index
+    function pickRandomMove() {
+      const emptyIndices = board.map((v,i) => (v === '' ? i : -1)).filter(i => i !== -1);
+      if (emptyIndices.length === 0) return -1;
+      return emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+    }
+
+    // Reset game state
+    function resetGame() {
+      board = ['', '', '', '', '', '', '', '', ''];
+      currentPlayer = 'X';
+      gameActive = true;
+      cells.forEach(cell => {
+        cell.textContent = '';
+        cell.classList.remove('disabled', 'win');
+      });
+      enableEmptyCells();
+      updateStatus();
+    }
+
+    // Keyboard accessibility: allow space and enter to activate cell
+    function handleCellKeydown(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.target.click();
+      }
+    }
+
+    // Event Listeners setup:
+    cells.forEach(cell => {
+      cell.addEventListener('click', handleCellClick);
+      cell.addEventListener('keydown', handleCellKeydown);
+    });
+    resetBtn.addEventListener('click', resetGame);
+
+    modeButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.id === 'mode-pvp') setMode(false);
+        else if (btn.id === 'mode-pvc') setMode(true);
+      });
+    });
+
+    // Initialize
+    setMode(false);
+
+  })();
+</script>
+</body>
+</html>
+
